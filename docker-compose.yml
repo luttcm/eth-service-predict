@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  go-server:
+    build: ./backend/go-server
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_NAME=eth_db
+    depends_on:
+      - postgres
+      - python-service
+
+  python-service:
+    build: ./backend/python-service
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/python-service/model:/app/model
+
+  frontend:
+    build: 
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+    depends_on:
+      - go-server
+
+  postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=eth_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 
